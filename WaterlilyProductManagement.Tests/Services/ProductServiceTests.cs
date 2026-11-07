@@ -2,8 +2,10 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using WaterlilyProductManagement.Constants;
 using WaterlilyProductManagement.Interfaces;
 using WaterlilyProductManagement.Models;
+using WaterlilyProductManagement.Models.Reports;
 using WaterlilyProductManagement.Services;
 
 namespace WaterlilyProductManagement.Tests.Services;
@@ -394,6 +396,124 @@ public class ProductServiceTests
         _mockRepository.Verify(
             r => r.GetByIdAsync(1),
             Times.Exactly(3));
+    }
+
+    [TestMethod]
+    public async Task AddAsync_InvalidatesReportCaches()
+    {
+        // Arrange
+        var cachedAveragePrices = new List<CategoryAveragePrice>
+    {
+        new() { Category = "Electronics", AveragePrice = 1000m }
+    };
+
+        var cachedHighestStockValue = new HighestStockValueCategory
+        {
+            Category = "Electronics",
+            TotalStockValue = 5000m
+        };
+
+        _cache.Set(CacheKeys.AveragePriceByCategory, cachedAveragePrices);
+        _cache.Set(CacheKeys.HighestStockValueCategory, cachedHighestStockValue);
+
+        _mockRepository.Setup(r => r.AddAsync(It.IsAny<Product>()))
+            .Returns(Task.CompletedTask);
+
+        var product = new Product
+        {
+            ProductId = 1,
+            Name = "Laptop",
+            Category = "Electronics",
+            Price = 1000m,
+            Stock = 5
+        };
+
+        // Act
+        await _service.AddAsync(product);
+
+        // Assert
+        Assert.IsFalse(_cache.TryGetValue(
+            CacheKeys.AveragePriceByCategory, out _));
+
+        Assert.IsFalse(_cache.TryGetValue(
+            CacheKeys.HighestStockValueCategory, out _));
+    }
+
+    [TestMethod]
+    public async Task UpdateAsync_InvalidatesReportCaches()
+    {
+        // Arrange
+        _cache.Set(
+            CacheKeys.AveragePriceByCategory,
+            new List<CategoryAveragePrice>());
+
+        _cache.Set(
+            CacheKeys.HighestStockValueCategory,
+            new HighestStockValueCategory());
+
+        var product = new Product
+        {
+            ProductId = 1,
+            Name = "Laptop",
+            Category = "Electronics",
+            Price = 1200m,
+            Stock = 8
+        };
+
+        _mockRepository.Setup(r => r.UpdateAsync(product))
+            .ReturnsAsync(true);
+
+        // Act
+        bool result = await _service.UpdateAsync(product);
+
+        // Assert
+        Assert.IsTrue(result);
+
+        Assert.IsFalse(_cache.TryGetValue(
+            CacheKeys.AveragePriceByCategory, out _));
+
+        Assert.IsFalse(_cache.TryGetValue(
+            CacheKeys.HighestStockValueCategory, out _));
+    }
+
+    [TestMethod]
+    public async Task DeleteAsync_InvalidatesReportCaches()
+    {
+        // Arrange
+        _cache.Set(
+            CacheKeys.AveragePriceByCategory,
+            new List<CategoryAveragePrice>());
+
+        _cache.Set(
+            CacheKeys.HighestStockValueCategory,
+            new HighestStockValueCategory());
+
+        var product = new Product
+        {
+            ProductId = 1,
+            Name = "Laptop",
+            Category = "Electronics",
+            Price = 1000m,
+            Stock = 5
+        };
+
+        _mockRepository.Setup(r => r.GetByIdAsync(1))
+            .ReturnsAsync(product);
+
+        _mockRepository.Setup(r => r.DeleteAsync(1))
+            .ReturnsAsync(true);
+
+        // Act
+        bool result = await _service.DeleteAsync(1);
+
+        // Assert
+        Assert.IsTrue(result);
+
+        Assert.IsFalse(_cache.TryGetValue(
+            CacheKeys.AveragePriceByCategory, out _));
+
+        Assert.IsFalse(_cache.TryGetValue(
+            CacheKeys.HighestStockValueCategory, out _));
     }
 }
 

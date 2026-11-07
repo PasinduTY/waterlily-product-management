@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using WaterlilyProductManagement.Interfaces;
 using WaterlilyProductManagement.Models;
+using WaterlilyProductManagement.Constants;
 
 namespace WaterlilyProductManagement.Services;
 
@@ -57,18 +58,31 @@ public class ProductService : IProductService
         return result;
     }
 
+    private void InvalidateProductAndReportCaches(int? productId = null)
+    {
+        _cache.Remove(CacheKeys.AllProducts);
+
+        if (productId.HasValue)
+        {
+            _cache.Remove(CacheKeys.ProductById(productId.Value));
+        }
+
+        _cache.Remove(CacheKeys.AveragePriceByCategory);
+        _cache.Remove(CacheKeys.HighestStockValueCategory);
+    }
+
 
     public async Task<IReadOnlyList<Product>> GetAllAsync()
     {
         return await CachedLong(
-            AllProductsCacheKey,
+            CacheKeys.AllProducts,
             () => _repository.GetAllAsync());
     }
 
     public async Task<Product?> GetByIdAsync(int id)
     {
         return await Cached(
-            $"Product_{id}",
+            CacheKeys.ProductById(id),
             () => _repository.GetByIdAsync(id));
     }
 
@@ -76,8 +90,7 @@ public class ProductService : IProductService
     {
         await _repository.AddAsync(product);
 
-        _cache.Remove(AllProductsCacheKey);
-        _cache.Remove($"Product_{product.ProductId}");
+        InvalidateProductAndReportCaches(product.ProductId);
 
         ProductChanged?.Invoke(product);
     }
@@ -87,12 +100,9 @@ public class ProductService : IProductService
         bool updated = await _repository.UpdateAsync(product);
 
         if (!updated)
-        {
             return false;
-        }
 
-        _cache.Remove(AllProductsCacheKey);
-        _cache.Remove($"Product_{product.ProductId}");
+        InvalidateProductAndReportCaches(product.ProductId);
 
         ProductChanged?.Invoke(product);
 
@@ -104,19 +114,14 @@ public class ProductService : IProductService
         Product? product = await _repository.GetByIdAsync(id);
 
         if (product is null)
-        {
             return false;
-        }
 
         bool deleted = await _repository.DeleteAsync(id);
 
         if (!deleted)
-        {
             return false;
-        }
 
-        _cache.Remove(AllProductsCacheKey);
-        _cache.Remove($"Product_{id}");
+        InvalidateProductAndReportCaches(id);
 
         ProductChanged?.Invoke(product);
 

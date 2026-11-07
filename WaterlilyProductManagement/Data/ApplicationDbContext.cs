@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.EntityFrameworkCore;
 using WaterlilyProductManagement.Models;
+using WaterlilyProductManagement.Models.Reports;
 
 namespace WaterlilyProductManagement.Data;
 
@@ -31,6 +32,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(p => p.Price)
                 .HasPrecision(18, 2);
         });
+
+        // Report result models (not database tables).
+        modelBuilder.Entity<CategoryAveragePrice>().HasNoKey();
+
+        modelBuilder.Entity<HighestStockValueCategory>().HasNoKey();
     }
 }
 

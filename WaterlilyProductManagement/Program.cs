@@ -20,6 +20,10 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddScoped<IProductService, ProductService>();
 
+builder.Services.AddScoped<IReportRepository, ReportRepository>();
+
+builder.Services.AddScoped<IReportService, ReportService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
