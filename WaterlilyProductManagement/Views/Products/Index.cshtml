@@ -1,0 +1,88 @@
+﻿@model IEnumerable<WaterlilyProductManagement.ViewModels.Products.ProductListItemViewModel>
+
+@{
+    ViewData["Title"] = "Products";
+}
+
+<div class="container mt-4">
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show"
+             role="alert">
+
+            @TempData["SuccessMessage"]
+
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close">
+            </button>
+
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Product List</h2>
+
+        <a asp-controller="Products"
+           asp-action="Create"
+           class="btn btn-primary">
+            Add Product
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No products found. Add your first product to get started.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Product ID</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var product in Model)
+                    {
+                        <tr>
+                            <td>@product.ProductId</td>
+                            <td>@product.Name</td>
+                            <td>@product.Category</td>
+                            <td>@product.Price.ToString("N2")</td>
+                            <td>@product.Stock</td>
+                            <td>
+                                <a asp-controller="Products"
+                                   asp-action="Edit"
+                                   asp-route-id="@product.ProductId"
+                                   class="btn btn-sm btn-warning">
+                                    Edit
+                                </a>
+
+                                <a asp-controller="Products"
+                                   asp-action="Delete"
+                                   asp-route-id="@product.ProductId"
+                                   class="btn btn-sm btn-danger">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+</div>
+
