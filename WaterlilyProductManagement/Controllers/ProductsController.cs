@@ -119,4 +119,42 @@ public class ProductsController : Controller
 
         return RedirectToAction(nameof(Index));
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var product = await _productService.GetByIdAsync(id);
+
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        var viewModel = new ProductListItemViewModel
+        {
+            ProductId = product.ProductId,
+            Name = product.Name,
+            Category = product.Category,
+            Price = product.Price,
+            Stock = product.Stock
+        };
+
+        return View(viewModel);
+    }
+
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        var isDeleted = await _productService.DeleteAsync(id);
+
+        if (!isDeleted)
+        {
+            return NotFound();
+        }
+
+        TempData["SuccessMessage"] = "Product deleted successfully.";
+
+        return RedirectToAction(nameof(Index));
+    }
 }
