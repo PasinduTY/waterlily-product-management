@@ -43,6 +43,11 @@ public class ReportRepositoryIntegrationTests
 
         try
         {
+            // Remove existing products temporarily so the test
+            // can verify the stored procedure using only test data.
+            await context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM dbo.Products");
+
             var categoryA = $"__Integration_A_{Guid.NewGuid():N}";
             var categoryB = $"__Integration_B_{Guid.NewGuid():N}";
 
@@ -105,7 +110,7 @@ public class ReportRepositoryIntegrationTests
         }
         finally
         {
-            // Remove temporary data, even if an assertion fails.
+            // Roll back all test changes and restore the original database state.
             await transaction.RollbackAsync();
         }
     }

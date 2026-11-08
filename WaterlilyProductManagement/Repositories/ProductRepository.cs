@@ -1,5 +1,4 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using WaterlilyProductManagement.Data;
 using WaterlilyProductManagement.Interfaces;
 using WaterlilyProductManagement.Models;
@@ -26,13 +25,13 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetByIdAsync(int id)
     {
         return await _context.Products
+            .AsNoTracking()
             .FirstOrDefaultAsync(p => p.ProductId == id);
     }
 
     public async Task AddAsync(Product product)
     {
         await _context.Products.AddAsync(product);
-
         await _context.SaveChangesAsync();
     }
 
@@ -69,4 +68,3 @@ public class ProductRepository : IProductRepository
         return true;
     }
 }
-

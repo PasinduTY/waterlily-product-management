@@ -1,5 +1,5 @@
+
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using WaterlilyProductManagement.Data;
 using WaterlilyProductManagement.Interfaces;
 using WaterlilyProductManagement.Repositories;
@@ -7,21 +7,23 @@ using WaterlilyProductManagement.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Register MVC services.
 builder.Services.AddControllersWithViews();
 
+// Register the database context.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-
+// Register memory caching.
 builder.Services.AddMemoryCache();
 
-builder.Services.AddScoped<IProductService, ProductService>();
-
+// Register repositories.
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IReportRepository, ReportRepository>();
 
+// Register services.
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 
 var app = builder.Build();
@@ -30,21 +32,22 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+
 app.UseRouting();
 
 app.UseAuthorization();
 
+// Serve static assets such as CSS and JavaScript.
 app.MapStaticAssets();
 
+// Configure the default MVC route.
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Products}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

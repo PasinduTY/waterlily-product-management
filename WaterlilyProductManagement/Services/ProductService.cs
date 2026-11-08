@@ -13,8 +13,6 @@ public class ProductService : IProductService
     private readonly IProductRepository _repository;
     private readonly IMemoryCache _cache;
 
-    private const string AllProductsCacheKey = "Products_All";
-
     public event ProductCallback? ProductChanged;
 
     public ProductService(

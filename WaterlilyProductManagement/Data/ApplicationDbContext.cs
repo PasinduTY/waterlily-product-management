@@ -1,5 +1,4 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using WaterlilyProductManagement.Models;
 using WaterlilyProductManagement.Models.Reports;
 
@@ -19,24 +18,14 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Product>(entity =>
-        {
-            entity.Property(p => p.Name)
-                .HasMaxLength(100)
-                .IsRequired();
+        // Configure the database precision for product prices.
+        modelBuilder.Entity<Product>()
+            .Property(p => p.Price)
+            .HasPrecision(18, 2);
 
-            entity.Property(p => p.Category)
-                .HasMaxLength(100)
-                .IsRequired();
-
-            entity.Property(p => p.Price)
-                .HasPrecision(18, 2);
-        });
-
-        // Report result models (not database tables).
+        // Report result models are keyless because they map
+        // to stored procedure results, not database tables.
         modelBuilder.Entity<CategoryAveragePrice>().HasNoKey();
-
         modelBuilder.Entity<HighestStockValueCategory>().HasNoKey();
     }
 }
-
